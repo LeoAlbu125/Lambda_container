@@ -45,7 +45,7 @@ jobs:
     - name: Deploy CloudFormation Stack
       run: |
         aws cloudformation deploy \
-          --template-file templates/packaged-template.yml \
+          --template-file template/packaged-template.yml \
           --stack-name lambda_stack \
           --capabilities CAPABILITY_IAM \
           --region us-east-1 \
@@ -53,4 +53,4 @@ jobs:
 
     - name: Clean up
       run: |
-        rm -f templates/packaged-template.yml
+        rm -f template/packaged-template.yml
