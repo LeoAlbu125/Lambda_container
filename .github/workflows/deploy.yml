@@ -35,7 +35,7 @@ jobs:
         aws cloudformation package \
           --template-file template/build.yaml \
           --s3-bucket $AWS_BUCKET \
-          --output-template-file  templates/packaged-template.yml
+          --output-template-file  template/packaged-template.yml
     
     - name: Delete CloudFormation Stack (if exists)
       run: |
