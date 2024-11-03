@@ -47,7 +47,38 @@ Resources:
               Action:
                 - sns:Publish
               Resource: !Ref Topic
-
+  functionb:
+    Type: AWS::Serverless::Function
+    Properties:
+      Description: !Sub
+        - Stack ${AWS::StackName} Function ${ResourceName}
+        - ResourceName: functionb
+      PackageType: Image
+      ImageUri: !Sub "${AWS::AccountId}.dkr.ecr.${AWS::Region}.amazonaws.com/${ECRREPO}:latest"  # Replace YourEcrRepoName with your actual ECR repository name
+      ImageConfig:
+        Command: [ "function_b.main.lambda_handler" ]  # Override the default handler
+      MemorySize: 3008
+      Timeout: 60
+      Tracing: Active
+      Environment:
+        Variables:
+          Bucket: !Ref BucketName
+          STAGING_BUCKET_ARN: !Sub arn:aws:s3:::${BucketName}
+      Policies:
+        - Statement:
+            - Effect: Allow
+              Action:
+                - s3:GetObject
+                - s3:ListBucket
+                - s3:PutObject
+              Resource:
+                - !Sub arn:${AWS::Partition}:s3:::${BucketName}
+                - !Sub arn:${AWS::Partition}:s3:::${BucketName}/*
+        - Statement:
+            - Effect: Allow
+              Action:
+                - sns:Publish
+              Resource: !Ref Topic
   # Policy allowing the existing S3 bucket to publish to the SNS topic
   ExistingS3ToTopicPermission:
     Type: AWS::SNS::TopicPolicy
@@ -102,4 +133,6 @@ Resources:
             Statement:
               - Effect: Allow
                 Action: lambda:InvokeFunction
-                Resource: !GetAtt GetData.Arn
+                Resource: 
+                  - !GetAtt GetData.Arn
+                  - !GetAtt functionb.Arn
