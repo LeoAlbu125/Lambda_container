@@ -22,7 +22,7 @@ Resources:
         - Stack ${AWS::StackName} Function ${ResourceName}
         - ResourceName: GetData
       PackageType: Image
-      ImageUri: !Sub "${AWS::AccountId}.dkr.ecr.${AWS::Region}.amazonaws.com/${ECR_REPO}:latest"  # Replace YourEcrRepoName with your actual ECR repository name
+      ImageUri: !Sub "${AWS::AccountId}.dkr.ecr.${AWS::Region}.amazonaws.com/${ECRREPO}:latest"  # Replace YourEcrRepoName with your actual ECR repository name
       ImageConfig:
         Command: [ "function_a.main.lambda_handler" ]  # Override the default handler
       MemorySize: 3008
