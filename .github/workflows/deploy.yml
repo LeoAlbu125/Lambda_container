@@ -46,7 +46,7 @@ jobs:
       run: |
         aws cloudformation deploy \
           --template-file template/packaged-template.yml \
-          --stack-name lambda_stack \
+          --stack-name lambdaStack \
           --capabilities CAPABILITY_IAM \
           --region us-east-1 \
           --no-fail-on-empty-changeset
