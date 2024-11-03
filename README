@@ -1,0 +1,2 @@
+Idea: Verify if the image exists, if not, create it, if yes, compare the hash of the local and the remote, 
+if diferent create a new latest image with all the code in the repository,

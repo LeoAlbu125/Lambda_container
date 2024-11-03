@@ -1,0 +1,104 @@
+Transform: AWS::Serverless-2016-10-31
+Parameters:
+  ECR_REPO:
+    Type: String
+    Description: "An example parameter passed from GitHub Actions"
+  BucketName:
+    Type: String
+    Default: samplestack-staging
+    Description: The name of the existing S3 bucket
+
+Resources:
+  # SNS Topic where S3 events are published
+  Topic:
+    Type: AWS::SNS::Topic
+
+  # Lambda function that will interact with S3 and SNS using a Docker image
+  GetData:
+    Type: AWS::Serverless::Function
+    Properties:
+      Description: !Sub
+        - Stack ${AWS::StackName} Function ${ResourceName}
+        - ResourceName: GetData
+      PackageType: Image
+      ImageUri: !Sub "${AWS::AccountId}.dkr.ecr.${AWS::Region}.amazonaws.com/${ECR_REPO}:latest"  # Replace YourEcrRepoName with your actual ECR repository name
+      ImageConfig:
+        Command: [ "function_a.main.lambda_handler" ]  # Override the default handler
+      MemorySize: 3008
+      Timeout: 60
+      Tracing: Active
+      Environment:
+        Variables:
+          Bucket: !Ref BucketName
+          STAGING_BUCKET_ARN: !Sub arn:aws:s3:::${BucketName}
+      Policies:
+        - Statement:
+            - Effect: Allow
+              Action:
+                - s3:GetObject
+                - s3:ListBucket
+                - s3:PutObject
+              Resource:
+                - !Sub arn:${AWS::Partition}:s3:::${BucketName}
+                - !Sub arn:${AWS::Partition}:s3:::${BucketName}/*
+        - Statement:
+            - Effect: Allow
+              Action:
+                - sns:Publish
+              Resource: !Ref Topic
+
+  # Policy allowing the existing S3 bucket to publish to the SNS topic
+  ExistingS3ToTopicPermission:
+    Type: AWS::SNS::TopicPolicy
+    Properties:
+      Topics:
+        - !Ref Topic
+      PolicyDocument:
+        Version: '2012-10-17'
+        Statement:
+          - Effect: Allow
+            Principal:
+              Service: s3.amazonaws.com
+            Action: sns:Publish
+            Resource: !Ref Topic
+            Condition:
+              ArnEquals:
+                aws:SourceArn: !Sub arn:${AWS::Partition}:s3:::${BucketName}
+
+  # Log group for Lambda function
+  GetDataLogGroup:
+    Type: AWS::Logs::LogGroup
+    DeletionPolicy: Retain
+    Properties:
+      LogGroupName: !Sub /aws/lambda/${GetData}
+
+  # Scheduler to invoke the Lambda function
+  GetDataWeeklyScheduler:
+    Type: AWS::Scheduler::Schedule
+    Properties:
+      ScheduleExpression: "cron(0 * * * ? *)"
+      FlexibleTimeWindow:
+        Mode: 'OFF'
+      Target:
+        Arn: !GetAtt GetData.Arn
+        RoleArn: !GetAtt GetDataWeeklySchedulerToGetDataRole.Arn
+
+  # IAM Role for the scheduler to invoke Lambda
+  GetDataWeeklySchedulerToGetDataRole:
+    Type: AWS::IAM::Role
+    Properties:
+      AssumeRolePolicyDocument:
+        Version: '2012-10-17'
+        Statement:
+          - Effect: Allow
+            Principal:
+              Service: scheduler.amazonaws.com
+            Action: sts:AssumeRole
+      Policies:
+        - PolicyName: StartExecutionPolicy
+          PolicyDocument:
+            Version: '2012-10-17'
+            Statement:
+              - Effect: Allow
+                Action: lambda:InvokeFunction
+                Resource: !GetAtt GetData.Arn
