@@ -1,7 +1,8 @@
 Transform: AWS::Serverless-2016-10-31
 Parameters:
-  ECR_REPO:
+  ECRREPO:
     Type: String
+    Default: lambda_base_image
     Description: "An example parameter passed from GitHub Actions"
   BucketName:
     Type: String
