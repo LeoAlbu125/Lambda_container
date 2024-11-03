@@ -33,7 +33,7 @@ jobs:
       run: |
         echo "$AWS_BUCKET"
         aws cloudformation package \
-          --template-file templates/build.yaml \
+          --template-file template/build.yaml \
           --s3-bucket $AWS_BUCKET \
           --output-template-file  templates/packaged-template.yml
     
