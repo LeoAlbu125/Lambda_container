@@ -29,7 +29,7 @@ jobs:
           
     - name: Package CloudFormation Template
       env:
-        AWS_BUCKET: ${{ env.LANDING_BUCKET }}
+        AWS_BUCKET: ${{ vars.LANDING_BUCKET }}
       run: |
         echo "$AWS_BUCKET"
         aws cloudformation package \
