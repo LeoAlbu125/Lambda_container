@@ -1,0 +1,55 @@
+name: Deploy CloudFormation Stack
+
+on:
+  push:
+    branches:
+      - main 
+
+jobs:
+  deploy:
+    runs-on: ubuntu-latest
+    
+    steps:
+    - name: Checkout code
+      uses: actions/checkout@v3
+
+    - name: Install AWS CLI
+      run: |
+        sudo apt-get update
+        sudo apt-get install -y awscli
+        
+    - name: Configure AWS credentials
+      env:
+        AWS_ACCESS_KEY_ID: ${{ secrets.ACCESS_KEY }}
+        AWS_SECRET_ACCESS_KEY: ${{ secrets.SECRET }}
+      run: |
+        aws configure set aws_access_key_id $AWS_ACCESS_KEY_ID
+        aws configure set aws_secret_access_key $AWS_SECRET_ACCESS_KEY
+        aws configure set region ${{ secrets.AWS_REGION }}
+          
+    - name: Package CloudFormation Template
+      env:
+        AWS_BUCKET: ${{ secrets.BUCKET }}
+      run: |
+        aws cloudformation package \
+          --template-file templates/build.yaml \
+          --s3-bucket $AWS_BUCKET \
+          --output-template-file  templates/packaged-template.yml
+    
+    - name: Delete CloudFormation Stack (if exists)
+      run: |
+        aws cloudformation delete-stack --stack-name lambda_stack || true
+        aws cloudformation wait stack-delete-complete --stack-name lambda_stack || true
+    
+    - name: Deploy CloudFormation Stack
+      run: |
+        aws cloudformation deploy \
+          --template-file templates/packaged-template.yml \
+          --stack-name lambda_stack \
+          --capabilities CAPABILITY_IAM \
+          --region us-east-1 \
+          --no-fail-on-empty-changeset
+
+    - name: Clean up
+      run: |
+        rm -f templates/packaged-template.yml
