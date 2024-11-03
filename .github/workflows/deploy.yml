@@ -31,6 +31,7 @@ jobs:
       env:
         AWS_BUCKET: ${{ env.LANDING_BUCKET }}
       run: |
+        echo $AWS_BUCKET
         aws cloudformation package \
           --template-file templates/build.yaml \
           --s3-bucket $AWS_BUCKET \
