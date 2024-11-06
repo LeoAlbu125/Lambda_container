@@ -3,7 +3,7 @@ Parameters:
   ECRREPO:
     Type: String
     Default: lambda_base_image
-    Description: "ECRREPO NAME parameters"
+    Description: "ECRREPO NAME parameters "
   BucketName:
     Type: String
     Default: samplestack-staging
