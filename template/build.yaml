@@ -3,7 +3,7 @@ Parameters:
   ECRREPO:
     Type: String
     Default: lambda_base_image
-    Description: "An example parameter passed from GitHub Actions"
+    Description: "ECRREPO NAME parameter"
   BucketName:
     Type: String
     Default: samplestack-staging
